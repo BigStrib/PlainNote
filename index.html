@@ -41,7 +41,7 @@
       color: #ffffff;
     }
 
-    /* Custom red blinking pipe visible only when text is empty */
+    /* Custom red blinking pipe shown when idle/unfocused and empty */
     .empty-prompt {
       position: absolute;
       top: 1.5rem;
@@ -50,7 +50,7 @@
       font-family: monospace, monospace;
       font-size: 1.2rem;
       line-height: 1.5;
-      pointer-events: none; /* Allows clicks to pass directly through to the textarea */
+      pointer-events: none;
       animation: blink 1s infinite;
     }
 
@@ -62,21 +62,21 @@
 </head>
 <body>
 
-  <!-- Custom blinking cursor element for empty state -->
+  <!-- Custom blinking cursor for unfocused empty state -->
   <div id="prompt" class="empty-prompt">|</div>
   
-  <textarea id="notepad" autofocus spellcheck="false"></textarea>
+  <textarea id="notepad" spellcheck="false"></textarea>
 
   <script>
     const notepad = document.getElementById('notepad');
     const prompt = document.getElementById('prompt');
 
     function updatePromptVisibility() {
-      // Show blinking prompt if empty, hide it as soon as text exists
-      if (notepad.value === '') {
-        prompt.style.display = 'block';
-      } else {
+      // Hide prompt if the user is currently focused/typing OR if text exists
+      if (document.activeElement === notepad || notepad.value !== '') {
         prompt.style.display = 'none';
+      } else {
+        prompt.style.display = 'block';
       }
     }
 
@@ -84,11 +84,17 @@
     notepad.value = localStorage.getItem('notepad_content') || '';
     updatePromptVisibility();
 
-    // Event listeners
+    // Save changes as user types
     notepad.addEventListener('input', () => {
       localStorage.setItem('notepad_content', notepad.value);
       updatePromptVisibility();
     });
+
+    // Hide prompt immediately on touch/click focus
+    notepad.addEventListener('focus', updatePromptVisibility);
+
+    // Bring back prompt if empty when user clicks away / unfocuses
+    notepad.addEventListener('blur', updatePromptVisibility);
   </script>
 
 </body>
