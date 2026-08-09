@@ -16,6 +16,7 @@
       height: 100%;
       background-color: #000000;
       overflow: hidden;
+      position: relative;
     }
 
     textarea {
@@ -29,9 +30,9 @@
       border: none;
       outline: none;
       resize: none;
-      /* Adjusted padding: reduced left side space from 5rem to 1rem */
       padding: 1.5rem 1.5rem 1.5rem 1rem;
       
+      /* Standard red blinking cursor */
       caret-color: #ff0000;
     }
 
@@ -39,21 +40,54 @@
       background-color: #ff0000;
       color: #ffffff;
     }
+
+    /* Custom red blinking pipe visible only when text is empty */
+    .empty-prompt {
+      position: absolute;
+      top: 1.5rem;
+      left: 1rem;
+      color: #ff0000;
+      font-family: monospace, monospace;
+      font-size: 1.2rem;
+      line-height: 1.5;
+      pointer-events: none; /* Allows clicks to pass directly through to the textarea */
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
   </style>
 </head>
 <body>
 
-  <textarea id="notepad" placeholder="" autofocus spellcheck="false"></textarea>
+  <!-- Custom blinking cursor element for empty state -->
+  <div id="prompt" class="empty-prompt">|</div>
+  
+  <textarea id="notepad" autofocus spellcheck="false"></textarea>
 
   <script>
     const notepad = document.getElementById('notepad');
+    const prompt = document.getElementById('prompt');
 
-    // Load saved content from local storage when the page opens
+    function updatePromptVisibility() {
+      // Show blinking prompt if empty, hide it as soon as text exists
+      if (notepad.value === '') {
+        prompt.style.display = 'block';
+      } else {
+        prompt.style.display = 'none';
+      }
+    }
+
+    // Load saved content from local storage
     notepad.value = localStorage.getItem('notepad_content') || '';
+    updatePromptVisibility();
 
-    // Save content automatically whenever the user types
+    // Event listeners
     notepad.addEventListener('input', () => {
       localStorage.setItem('notepad_content', notepad.value);
+      updatePromptVisibility();
     });
   </script>
 
