@@ -17,11 +17,6 @@
             background: #000000;
             overflow: hidden;
         }
-        /*
-         * These values are shared by the textarea and
-         * fake cursor so they occupy the exact same
-         * text position.
-         */
         textarea,
         .fake-cursor {
             font-family: monospace, monospace;
@@ -41,11 +36,6 @@
             outline: none;
             resize: none;
             overflow: auto;
-            /*
-             * The real caret is red when text exists.
-             * JavaScript changes this to transparent when
-             * the document is completely empty.
-             */
             caret-color: #ff0000;
             z-index: 1;
         }
@@ -54,10 +44,10 @@
             color: #ffffff;
         }
         /*
-         * Fake blinking cursor.
+         * Fake cursor.
          *
-         * It is placed at the exact same coordinates as
-         * the textarea's first character position.
+         * Same font, size, line-height and position as
+         * the first character in the textarea.
          */
         .fake-cursor {
             position: fixed;
@@ -67,20 +57,12 @@
             pointer-events: none;
             user-select: none;
             z-index: 2;
-            animation: blink 1s steps(1, end) infinite;
         }
         .fake-cursor.hidden {
             display: none;
         }
-        @keyframes blink {
-            0%,
-            49% {
-                opacity: 1;
-            }
-            50%,
-            100% {
-                opacity: 0;
-            }
+        .fake-cursor.invisible {
+            visibility: hidden;
         }
     </style>
 </head>
@@ -97,42 +79,79 @@
         const notepad = document.getElementById("notepad");
         const fakeCursor = document.getElementById("fakeCursor");
         const STORAGE_KEY = "notepad_content";
+        let blinkTimer = null;
+        let cursorVisible = true;
         /*
-         * Update the cursor state.
+         * Start the fake cursor blinking.
          *
-         * When the document is completely empty:
-         *   - The fake blinking cursor is shown.
-         *   - The browser's real caret is hidden.
-         *
-         * When there is text:
-         *   - The fake cursor disappears.
-         *   - The normal red browser caret is restored.
+         * JavaScript controls the blinking instead of CSS.
+         * This is more reliable when the page is hosted inside
+         * a WebView or application shell.
+         */
+        function startBlinking() {
+            stopBlinking();
+            cursorVisible = true;
+            fakeCursor.classList.remove("invisible");
+            blinkTimer = setInterval(() => {
+                cursorVisible = !cursorVisible;
+                if (cursorVisible) {
+                    fakeCursor.classList.remove("invisible");
+                } else {
+                    fakeCursor.classList.add("invisible");
+                }
+            }, 500);
+        }
+        /*
+         * Stop blinking and reset the cursor.
+         */
+        function stopBlinking() {
+            if (blinkTimer !== null) {
+                clearInterval(blinkTimer);
+                blinkTimer = null;
+            }
+            cursorVisible = true;
+            fakeCursor.classList.remove("invisible");
+        }
+        /*
+         * Update the cursor depending on whether the document
+         * contains any text.
          */
         function updateCursor() {
             const isEmpty = notepad.value.length === 0;
             if (isEmpty) {
+                /*
+                 * Empty document:
+                 * show fake blinking cursor and hide the
+                 * browser's real caret.
+                 */
                 fakeCursor.classList.remove("hidden");
                 notepad.style.caretColor = "transparent";
+                startBlinking();
             } else {
+                /*
+                 * Document contains text:
+                 * remove fake cursor and restore real caret.
+                 */
                 fakeCursor.classList.add("hidden");
                 notepad.style.caretColor = "#ff0000";
+                stopBlinking();
             }
         }
         /*
-         * Load saved document.
+         * Load saved text.
          */
         notepad.value = localStorage.getItem(STORAGE_KEY) || "";
         /*
-         * Save changes and update the cursor.
+         * Save whenever the document changes.
          *
-         * This fires when text is typed AND when text is deleted.
+         * This also catches deleting the final character.
          */
         notepad.addEventListener("input", () => {
             localStorage.setItem(STORAGE_KEY, notepad.value);
             updateCursor();
         });
         /*
-         * Initial cursor state.
+         * Initial state.
          */
         updateCursor();
     </script>
