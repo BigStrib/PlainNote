@@ -16,7 +16,14 @@
       height: 100%;
       background-color: #000000;
       overflow: hidden;
-      position: relative;
+    }
+
+    /* Shared typography parameters ensure identical proportions */
+    textarea, .empty-prompt {
+      font-family: monospace, monospace;
+      font-size: 1.2rem;
+      line-height: 1.5;
+      padding: 1.5rem 1.5rem 1.5rem 1rem;
     }
 
     textarea {
@@ -24,15 +31,11 @@
       height: 100%;
       background-color: #000000;
       color: #ffffff;
-      font-family: monospace, monospace;
-      font-size: 1.2rem;
-      line-height: 1.5;
       border: none;
       outline: none;
       resize: none;
-      padding: 1.5rem 1.5rem 1.5rem 1rem;
       
-      /* Standard red blinking cursor */
+      /* Real red blinking cursor */
       caret-color: #ff0000;
     }
 
@@ -41,17 +44,14 @@
       color: #ffffff;
     }
 
-    /* Custom red blinking pipe shown when idle/unfocused and empty */
+    /* Custom red blinking pipe aligned identically to the text canvas */
     .empty-prompt {
       position: absolute;
-      top: 1.5rem;
-      left: 1rem;
+      top: 0;
+      left: 0;
       color: #ff0000;
-      font-family: monospace, monospace;
-      font-size: 1.2rem;
-      line-height: 1.5;
       pointer-events: none;
-      animation: blink 1s infinite;
+      animation: blink 1s steps(1) infinite;
     }
 
     @keyframes blink {
@@ -62,7 +62,7 @@
 </head>
 <body>
 
-  <!-- Custom blinking cursor for unfocused empty state -->
+  <!-- Custom blinking cursor element -->
   <div id="prompt" class="empty-prompt">|</div>
   
   <textarea id="notepad" spellcheck="false"></textarea>
@@ -72,7 +72,7 @@
     const prompt = document.getElementById('prompt');
 
     function updatePromptVisibility() {
-      // Hide prompt if the user is currently focused/typing OR if text exists
+      // Hide the fake pipe whenever focused OR when content exists
       if (document.activeElement === notepad || notepad.value !== '') {
         prompt.style.display = 'none';
       } else {
@@ -84,16 +84,13 @@
     notepad.value = localStorage.getItem('notepad_content') || '';
     updatePromptVisibility();
 
-    // Save changes as user types
+    // Event handlers for focus state & input changes
     notepad.addEventListener('input', () => {
       localStorage.setItem('notepad_content', notepad.value);
       updatePromptVisibility();
     });
 
-    // Hide prompt immediately on touch/click focus
     notepad.addEventListener('focus', updatePromptVisibility);
-
-    // Bring back prompt if empty when user clicks away / unfocuses
     notepad.addEventListener('blur', updatePromptVisibility);
   </script>
 
