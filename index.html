@@ -18,8 +18,9 @@
             overflow: hidden;
         }
         /*
-         * Both the textarea and fake cursor use these exact
-         * typography values so their positions match.
+         * These values are shared by the textarea and
+         * fake cursor so they occupy the exact same
+         * text position.
          */
         textarea,
         .fake-cursor {
@@ -29,7 +30,8 @@
         }
         textarea {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             padding: 1.5rem 1.5rem 1.5rem 1rem;
@@ -39,28 +41,36 @@
             outline: none;
             resize: none;
             overflow: auto;
+            /*
+             * The real caret is red when text exists.
+             * JavaScript changes this to transparent when
+             * the document is completely empty.
+             */
             caret-color: #ff0000;
+            z-index: 1;
         }
         textarea::selection {
             background: #ff0000;
             color: #ffffff;
         }
         /*
-         * Fake cursor.
+         * Fake blinking cursor.
          *
-         * It uses the exact same padding as the textarea.
-         * This places the "|" at precisely the same starting
-         * position as the real textarea caret.
+         * It is placed at the exact same coordinates as
+         * the textarea's first character position.
          */
         .fake-cursor {
             position: fixed;
             top: 1.5rem;
             left: 1rem;
             color: #ff0000;
-            line-height: 1.5;
             pointer-events: none;
             user-select: none;
+            z-index: 2;
             animation: blink 1s steps(1, end) infinite;
+        }
+        .fake-cursor.hidden {
+            display: none;
         }
         @keyframes blink {
             0%,
@@ -71,9 +81,6 @@
             100% {
                 opacity: 0;
             }
-        }
-        .fake-cursor.hidden {
-            display: none;
         }
     </style>
 </head>
@@ -91,61 +98,43 @@
         const fakeCursor = document.getElementById("fakeCursor");
         const STORAGE_KEY = "notepad_content";
         /*
-         * Update the fake cursor.
+         * Update the cursor state.
          *
-         * The fake cursor is only needed when the document is
-         * completely empty and the textarea is not being actively
-         * edited. When the textarea has focus, the browser's real
-         * red caret is used instead.
+         * When the document is completely empty:
+         *   - The fake blinking cursor is shown.
+         *   - The browser's real caret is hidden.
+         *
+         * When there is text:
+         *   - The fake cursor disappears.
+         *   - The normal red browser caret is restored.
          */
-        function updateFakeCursor() {
+        function updateCursor() {
             const isEmpty = notepad.value.length === 0;
-            const isFocused = document.activeElement === notepad;
-            if (isEmpty && !isFocused) {
+            if (isEmpty) {
                 fakeCursor.classList.remove("hidden");
+                notepad.style.caretColor = "transparent";
             } else {
                 fakeCursor.classList.add("hidden");
+                notepad.style.caretColor = "#ff0000";
             }
         }
         /*
-         * Load previously saved text.
+         * Load saved document.
          */
         notepad.value = localStorage.getItem(STORAGE_KEY) || "";
         /*
-         * Save whenever the document changes.
+         * Save changes and update the cursor.
          *
-         * This also handles the important case where the user:
-         *
-         * 1. Enters text
-         * 2. Deletes all of it
-         * 3. Leaves a completely blank document
-         *
-         * The fake "|" is restored automatically.
+         * This fires when text is typed AND when text is deleted.
          */
         notepad.addEventListener("input", () => {
             localStorage.setItem(STORAGE_KEY, notepad.value);
-            updateFakeCursor();
+            updateCursor();
         });
         /*
-         * When the user starts typing, the real caret is used.
+         * Initial cursor state.
          */
-        notepad.addEventListener("focus", () => {
-            updateFakeCursor();
-        });
-        /*
-         * When the user leaves an empty document, the fake
-         * blinking cursor comes back.
-         */
-        notepad.addEventListener("blur", () => {
-            updateFakeCursor();
-        });
-        /*
-         * Initial state.
-         *
-         * If there is no saved text, the fake cursor is displayed
-         * immediately at the same position as the real caret.
-         */
-        updateFakeCursor();
+        updateCursor();
     </script>
 </body>
 </html>
