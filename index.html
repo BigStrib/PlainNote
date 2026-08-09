@@ -72,11 +72,11 @@
     const prompt = document.getElementById('prompt');
 
     function updatePromptVisibility() {
-      // Hide the fake pipe whenever focused OR when content exists
-      if (document.activeElement === notepad || notepad.value !== '') {
-        prompt.style.display = 'none';
-      } else {
+      // Show prompt ONLY if text is completely empty AND user is not actively focused
+      if (notepad.value === '' && document.activeElement !== notepad) {
         prompt.style.display = 'block';
+      } else {
+        prompt.style.display = 'none';
       }
     }
 
@@ -84,7 +84,7 @@
     notepad.value = localStorage.getItem('notepad_content') || '';
     updatePromptVisibility();
 
-    // Event handlers for focus state & input changes
+    // Event handlers for focus, blur, and typing/deleting text
     notepad.addEventListener('input', () => {
       localStorage.setItem('notepad_content', notepad.value);
       updatePromptVisibility();
