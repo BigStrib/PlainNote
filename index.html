@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlainNote</title>
-  <link rel="icon" type="image/png" href="images/favi.png">
+  <title>Notepad</title>
   <style>
-    /* Reset margins/padding and force full-screen height */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -20,7 +18,6 @@
       overflow: hidden;
     }
 
-    /* Full-screen textarea with padding on the left */
     textarea {
       width: 100%;
       height: 100%;
@@ -32,14 +29,12 @@
       border: none;
       outline: none;
       resize: none;
-      /* Padding leaves space on the left side */
-      padding: 2rem 2rem 2rem 5rem;
+      /* Adjusted padding: reduced left side space from 5rem to 1rem */
+      padding: 1.5rem 1.5rem 1.5rem 1rem;
       
-      /* Red blinking text cursor */
       caret-color: #ff0000;
     }
 
-    /* Red highlight color when text is selected */
     textarea::selection {
       background-color: #ff0000;
       color: #ffffff;
@@ -48,7 +43,19 @@
 </head>
 <body>
 
-  <textarea placeholder="" autofocus spellcheck="false"></textarea>
+  <textarea id="notepad" placeholder="" autofocus spellcheck="false"></textarea>
+
+  <script>
+    const notepad = document.getElementById('notepad');
+
+    // Load saved content from local storage when the page opens
+    notepad.value = localStorage.getItem('notepad_content') || '';
+
+    // Save content automatically whenever the user types
+    notepad.addEventListener('input', () => {
+      localStorage.setItem('notepad_content', notepad.value);
+    });
+  </script>
 
 </body>
 </html>
